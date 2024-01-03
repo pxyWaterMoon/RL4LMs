@@ -137,5 +137,6 @@ cluster_utils/
 
 #expirenment
 rl4lm_exps/
+
 package/
-scripts/training/task_configs/
+
