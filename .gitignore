@@ -134,3 +134,8 @@ dmypy.json
 .idea/
 cluster_utils/
 **/wandb/
+
+#expirenment
+rl4lm_exps/
+package/
+scripts/training/task_configs/

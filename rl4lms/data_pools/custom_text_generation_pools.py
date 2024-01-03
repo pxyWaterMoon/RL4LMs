@@ -582,6 +582,25 @@ class DailyDialog(TextGenPool):
         return dp_instance
 
 
+class PKUSafeRLHF(TextGenPool):
+    PATH = "/mnt/lustrenew/zhangjiawei/rlhf/dataset/PKU-SafeRLHF" #local path
+    @classmethod
+    def prepare(cls, split: str, context_size: int):
+        split = CommonGen.gen_split_name(split)
+        dataset = load_dataset(PKUSafeRLHF.PATH, split=split)
+        samples = []
+        for ix, item in enumerate(dataset):
+            input = item["context"]
+            answer = item["response_0"]
+            sample = Sample(id=f"{split}_{ix}",
+                            prompt_or_input_text=input,
+                            references=[answer])
+            #ignore the other_answer, better, safer, is_safe, is_other_safe?
+            samples.append(sample)
+
+        dp_instance = cls(samples)
+        return dp_instance
+
 if __name__ == "__main__":
     from transformers import AutoTokenizer
     import numpy as np
