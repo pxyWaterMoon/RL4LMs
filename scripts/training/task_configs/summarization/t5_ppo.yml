@@ -10,7 +10,7 @@ reward_fn:
     rouge_type: "rouge1"
 
 datapool:
-  id: cnn_daily_mail
+  id: PKUSafeRLHF
   args:
     prompt_prefix: "Summarize: "
 
