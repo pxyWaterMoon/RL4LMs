@@ -589,8 +589,10 @@ class PKUSafeRLHF(TextGenPool):
         dataset = load_dataset(PATH)
         samples = []
         samples = []
-        for ix, item in enumerate(dataset[split]):
-            print(item)
+        
+        for ix, item in tqdm(enumerate(dataset[split]), desc="Preparing dataset", total=len(dataset[split])):
+        
+            # print(item)
             input = item["prompt"]
             if item["safer_response_id"] == 0:
                 answer = item["response_0"]
