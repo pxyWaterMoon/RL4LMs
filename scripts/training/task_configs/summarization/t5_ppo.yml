@@ -13,7 +13,7 @@ reward_fn:
 datapool:
   id: PKUSafeRLHF
   args:
-    # PATH = "/mnt/lustrenew/zhangjiawei/rlhf/dataset/PKU-SafeRLHF" #mnt local path
+    # PATH: /mnt/lustrenew/zhangjiawei/rlhf/dataset/PKU-SafeRLHF #mnt local path
     PATH: ../dataset/PKU-SafeRLHF # local path
     # prompt_prefix: "Summarize: "
 

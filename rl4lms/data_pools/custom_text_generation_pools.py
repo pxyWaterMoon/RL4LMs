@@ -586,58 +586,21 @@ class PKUSafeRLHF(TextGenPool):
     @classmethod
     def prepare(cls, split: str, PATH: str):
         dataset_split = CommonGen.gen_split_name(split)
-        # data_files = {'train': 'train.jsonl', 'test': 'test.jsonl', 'validation': 'validation.jsonl'}
-        # dataset = load_dataset(PATH + '/round0', data_files=data_files)
-        # print(dataset)
-        ep_file_paths = {
-            "train": os.path.join(PATH, "round0", "train.jsonl"),
-            "val": os.path.join(PATH, "round0", "validation.jsonl"),
-            "test": os.path.join(PATH, "round0", "test.jsonl"),
-        }
-        data = load_from_disk(os.path)
-        print(data)
-
-        # now, load all episode files for the split
+        dataset = load_dataset(PATH)
         samples = []
-        # for ep_ix, file_name in enumerate(ep_file_names):
-        #     print(ep_file_names)
-        # print(PATH)
-        exit()
-        dataset_split = CommonGen.gen_split_name(split)
         samples = []
-        for ix, item in tqdm(enumerate(dataset[dataset_split]),
-                             desc="Tokenizing dataset",
-                             total=len(dataset[dataset_split])):
-
-            if truncate_article is not None:
-                tokens = word_tokenize(item["article"])
-                tokens = tokens[:truncate_article]
-                item["article"] = " ".join(tokens)
-
-            sample = Sample(id=f"{split}_{ix}",
-                            prompt_or_input_text=prompt_prefix +
-                            item["article"] + prompt_suffix,
-                            references=[item["highlights"]]
-                            )
-            samples.append(sample)
-
-            if max_size is not None and ix == (max_size-1):
-                break
-
-        pool_instance = cls(samples)
-        return pool_instance
-        # print(dataset)
-        # exit()
-        samples = []
-        for ix, item in enumerate(dataset):
-            input = item["context"]
-            answer = item["response_0"]
+        for ix, item in enumerate(dataset[split]):
+            print(item)
+            input = item["prompt"]
+            if item["safer_response_id"] == 0:
+                answer = item["response_0"]
+            else:
+                answer = item["response_1"]
             sample = Sample(id=f"{split}_{ix}",
                             prompt_or_input_text=input,
                             references=[answer])
             #ignore the other_answer, better, safer, is_safe, is_other_safe?
             samples.append(sample)
-
         dp_instance = cls(samples)
         return dp_instance
 
