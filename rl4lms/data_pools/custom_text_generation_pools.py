@@ -589,7 +589,8 @@ class PKUSafeRLHF(TextGenPool):
         dataset = load_dataset(PATH)
         samples = []
         samples = []
-        
+        # print(dataset)
+        # exit()
         for ix, item in tqdm(enumerate(dataset[split]), desc="Preparing dataset", total=len(dataset[split])):
         
             # print(item)

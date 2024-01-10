@@ -199,6 +199,7 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
         # train for given number of iters
         for epoch in range(iter_start, self._n_iters):
             # current state
+            print("epoch: ", epoch)
             self._trainer_state["current_iter"] = epoch
 
             # inner rollout and learn loop for on-policy algorithm

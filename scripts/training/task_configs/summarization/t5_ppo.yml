@@ -1,6 +1,6 @@
 tokenizer:
-  # model_name: /mnt/lustrenew/zhangjiawei/rlhf/model/t5-base # mnt
-  model_name: ../model/t5-base #local
+  model_name: /mnt/lustrenew/zhangjiawei/rlhf/model/t5-base # mnt
+  # model_name: ../model/t5-base #local
   padding_side: left
   truncation_side: left
   pad_token_as_eos_token: False
@@ -13,8 +13,8 @@ reward_fn:
 datapool:
   id: PKUSafeRLHF
   args:
-    # PATH: /mnt/lustrenew/zhangjiawei/rlhf/dataset/PKU-SafeRLHF #mnt local path
-    PATH: ../dataset/PKU-SafeRLHF # local path
+    PATH: /mnt/lustrenew/zhangjiawei/rlhf/dataset/PKU-SafeRLHF #mnt local path
+    # PATH: ../dataset/PKU-SafeRLHF # local path
     # prompt_prefix: "Summarize: "
 
 # datapool:
@@ -46,8 +46,8 @@ alg:
   policy:
     id: seq2seq_lm_actor_critic_policy
     args:
-      # model_name: /mnt/lustrenew/zhangjiawei/rlhf/model/t5-base # mnt
-      model_name: ../model/t5-base #local
+      model_name: /mnt/lustrenew/zhangjiawei/rlhf/model/t5-base # mnt
+      # model_name: ../model/t5-base #local
       apply_model_parallel: True
       prompt_truncation_side: "right"
       generation_kwargs:
@@ -67,9 +67,9 @@ train_evaluation:
     - id: rouge
     - id: bleu
       args: {}
-    - id: bert_score
-      args:
-        language: en
+    # - id: bert_score
+    #   args:
+    #     language: en
     # - id: bleurt
     #   args:
     #     config_name: bleurt-large-512
