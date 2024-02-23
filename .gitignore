@@ -137,6 +137,6 @@ cluster_utils/
 
 #expirenment
 rl4lm_exps/
-
+test/
 package/
 

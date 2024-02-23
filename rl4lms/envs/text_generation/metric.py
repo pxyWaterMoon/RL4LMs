@@ -13,6 +13,7 @@ from gem_metrics.texts import Predictions
 from rl4lms.envs.text_generation.summ_metrics.summa_c import SummaCConv, SummaCZS
 from rl4lms.data_pools.task_utils.totto.eval_utils import compute_parent, compute_bleu
 from rl4lms.data_pools.custom_text_generation_pools import DailyDialog
+from rl4lms.models.score_model import AutoModelForScore
 from tqdm import tqdm
 import copy
 import rouge
@@ -718,6 +719,118 @@ class IntentAccuracyDailyDialog(BaseMetric):
         metric_dict = {"intent/accuracy": (matching_scores.tolist(), intent_accuracy)}
         return metric_dict
 
+class PKUHelpfulness_metric(BaseMetric):
+    
+    def __init__(
+        self,
+        model_name: str,
+        # label_ix: int,
+        batch_size: int = 1,
+        include_prompt_for_eval: bool = True,
+        truncation: bool = True,
+        padding: bool = True,
+        max_length: int = 512
+    ) -> None:
+        super().__init__()
+        self._device = "cuda" if torch.cuda.is_available() else "cpu"
+        self._tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
+        self._model = AutoModelForScore.from_pretrained(model_name).to(self._device)
+        # self._label_ix = label_ix
+        self._batch_size = batch_size
+        self._include_prompt_for_eval = include_prompt_for_eval
+        self._truncation = truncation
+        self._padding = padding
+        self._max_length = max_length
+    
+    def compute(self, prompt_texts: List[str], generated_texts: List[str], reference_texts: List[List[str]], meta_infos: List[Dict[str, Any]] = None, model: PreTrainedModel = None, split_name: str = None):
+        all_scores = []
+        current_ix = 0
+        n_texts = len(generated_texts)
+        while current_ix < n_texts:
+            batch_gen_texts = generated_texts[
+                current_ix : current_ix + self._batch_size
+            ]
+            batch_prompt_texts = prompt_texts[
+                current_ix : current_ix + self._batch_size
+            ]
+
+            if self._include_prompt_for_eval:
+                batch_gen_texts = [
+                    (prompt + gen)
+                    for gen, prompt in zip(batch_gen_texts, batch_prompt_texts)
+                ]
+            encoded = self._tokenizer(
+                batch_gen_texts, return_tensors="pt",
+                truncation=self._truncation,
+                padding=self._padding,
+                max_length=self._max_length
+            ).to(self._device)
+            with torch.no_grad():
+                scores = self._model(**encoded)
+                scores = scores.end_scores.tolist()
+                all_scores.extend(scores)
+            current_ix += self._batch_size
+
+        metric_dict = {
+            "semantic/PKUHelpfulness_metric": (all_scores, np.mean(all_scores))
+        }
+        return metric_dict
+
+class PKUHarmlessness_metric(BaseMetric):
+    
+    def __init__(
+        self,
+        model_name: str,
+        # label_ix: int,
+        batch_size: int = 1,
+        include_prompt_for_eval: bool = True,
+        truncation: bool = True,
+        padding: bool = True,
+        max_length: int = 512
+    ) -> None:
+        super().__init__()
+        self._device = "cuda" if torch.cuda.is_available() else "cpu"
+        self._tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
+        self._model = AutoModelForScore.from_pretrained(model_name).to(self._device)
+        self._batch_size = batch_size
+        self._include_prompt_for_eval = include_prompt_for_eval
+        self._truncation = truncation
+        self._padding = padding
+        self._max_length = max_length
+    
+    def compute(self, prompt_texts: List[str], generated_texts: List[str], reference_texts: List[List[str]], meta_infos: List[Dict[str, Any]] = None, model: PreTrainedModel = None, split_name: str = None):
+        all_scores = []
+        current_ix = 0
+        n_texts = len(generated_texts)
+        while current_ix < n_texts:
+            batch_gen_texts = generated_texts[
+                current_ix : current_ix + self._batch_size
+            ]
+            batch_prompt_texts = prompt_texts[
+                current_ix : current_ix + self._batch_size
+            ]
+
+            if self._include_prompt_for_eval:
+                batch_gen_texts = [
+                    (prompt + gen)
+                    for gen, prompt in zip(batch_gen_texts, batch_prompt_texts)
+                ]
+            encoded = self._tokenizer(
+                batch_gen_texts, return_tensors="pt",
+                truncation=self._truncation,
+                padding=self._padding,
+                max_length=self._max_length
+            ).to(self._device)
+            with torch.no_grad():
+                scores = self._model(**encoded)
+                scores = scores.end_scores.tolist()
+                all_scores.extend(scores)
+            current_ix += self._batch_size
+
+        metric_dict = {
+            "semantic/PKUHelpfulness_metric": (all_scores, np.mean(all_scores))
+        }
+        return metric_dict
 
 if __name__ == "__main__":
     prompt_texts = [""]
@@ -770,8 +883,10 @@ if __name__ == "__main__":
         ["The dog is the boy's cat.", "The dog eats the cat of the boy."],
         ["A boy is picking apples from trees."],
     ]
-    metric = CIDERMetric()
+    metric = PKUHelpfulness_metric(model_name="../model/beaver-7b-v1.0-reward")
     print(metric.compute(prompt_texts, gen_texts, reference_texts))
+    # metric = CIDERMetric()
+    # print(metric.compute(prompt_texts, gen_texts, reference_texts))
 
-    metric = SpiceMetric()
-    print(metric.compute(prompt_texts, gen_texts, reference_texts))
+    # metric = SpiceMetric()
+    # print(metric.compute(prompt_texts, gen_texts, reference_texts))

@@ -18,7 +18,7 @@ from rl4lms.envs.text_generation.metric import (
 )
 import numpy as np
 from typing import List, Dict, Any
-
+from rl4lms.models.score_model import AutoModelForScore
 
 class RewardFunction(ABC):
     @abstractclassmethod
@@ -658,6 +658,101 @@ class IntentAccuracy(BatchedRewardFunction):
         rewards[done_ixs] += self._intent_coeff * np.array(scores)
         return rewards.tolist()
 
+class PKUHelpfulnessFunction(RewardFunction):
+    
+    def __init__(
+        self,
+        model_name: str,
+        include_prompt_for_eval: bool = True,
+        truncation: bool = True,
+        padding: bool = True,
+        max_length: int = 512
+    ) -> None:
+        super().__init__()
+        self._device = "cuda" if torch.cuda.is_available() else "cpu"
+        self._tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
+        self._model = AutoModelForScore.from_pretrained(model_name).to(self._device)
+        self._include_prompt_for_eval = include_prompt_for_eval
+        self._truncation = truncation
+        self._padding = padding
+        self._max_length = max_length
+    
+    def __call__(
+        self,
+        current_observation: Observation,
+        action: int,
+        next_observation: Observation,
+        done: bool,
+        meta_info: Dict[str, Any] = None,
+    ) -> List[float]:
+        if done:
+            generated_text = (
+                current_observation.prompt_or_input_text
+                if (self._include_prompt_for_eval and current_observation is not None) 
+                else ""
+            )
+            generated_text += next_observation.context_text
+
+            with torch.no_grad():
+                encoded = self._tokenizer(
+                    generated_text, 
+                    return_tensors="pt",
+                    truncation=self._truncation,
+                    padding=self._padding,
+                    max_length=self._max_length
+                ).to(self._device)
+                scores = self._model(**encoded)
+                scores = scores.end_scores.tolist()
+                return scores
+        return 0
+
+class PKUHarmlessnessFunction(RewardFunction):
+    
+    def __init__(
+        self,
+        model_name: str,
+        include_prompt_for_eval: bool = True,
+        truncation: bool = True,
+        padding: bool = True,
+        max_length: int = 512
+    ) -> None:
+        super().__init__()
+        self._device = "cuda" if torch.cuda.is_available() else "cpu"
+        self._tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
+        self._model = AutoModelForScore.from_pretrained(model_name).to(self._device)
+        self._include_prompt_for_eval = include_prompt_for_eval
+        self._truncation = truncation
+        self._padding = padding
+        self._max_length = max_length
+    
+    def __call__(
+        self,
+        current_observation: Observation,
+        action: int,
+        next_observation: Observation,
+        done: bool,
+        meta_info: Dict[str, Any] = None,
+    ) -> List[float]:
+        if done:
+            generated_text = (
+                current_observation.prompt_or_input_text
+                if (self._include_prompt_for_eval and current_observation is not None) 
+                else ""
+            )
+            generated_text += next_observation.context_text
+
+            with torch.no_grad():
+                encoded = self._tokenizer(
+                    generated_text, 
+                    return_tensors="pt",
+                    truncation=self._truncation,
+                    padding=self._padding,
+                    max_length=self._max_length
+                ).to(self._device)
+                scores = self._model(**encoded)
+                scores = scores.end_scores.tolist()
+                return scores
+        return 0
 
 if __name__ == "__main__":
     predictions = "hello there general kenobi"
@@ -666,29 +761,32 @@ if __name__ == "__main__":
         None, None, None, None, None, predictions, references, None, None, None, None
     )
 
-    reward_fn = MeteorRewardFunction()
-    print(reward_fn(None, None, observation, True))
+    # reward_fn = MeteorRewardFunction()
+    # print(reward_fn(None, None, observation, True))
 
-    reward_fn = chrF()
-    print(reward_fn(None, None, observation, True))
+    # reward_fn = chrF()
+    # print(reward_fn(None, None, observation, True))
 
-    reward_fn = RougeCombined()
-    print(reward_fn(None, None, observation, True))
+    # reward_fn = RougeCombined()
+    # print(reward_fn(None, None, observation, True))
 
-    reward_fn = RougeRewardFunction(rouge_type="rouge1")
-    print(reward_fn(None, None, observation, True))
+    # reward_fn = RougeRewardFunction(rouge_type="rouge1")
+    # print(reward_fn(None, None, observation, True))
 
-    reward_fn = RougeRewardFunction(rouge_type="rouge2")
-    print(reward_fn(None, None, observation, True))
+    # reward_fn = RougeRewardFunction(rouge_type="rouge2")
+    # print(reward_fn(None, None, observation, True))
 
-    reward_fn = RougeRewardFunction(rouge_type="rougeL")
-    print(reward_fn(None, None, observation, True))
+    # reward_fn = RougeRewardFunction(rouge_type="rougeL")
+    # print(reward_fn(None, None, observation, True))
 
-    reward_fn = BERTScoreRewardFunction(language="en")
-    print(reward_fn(None, None, observation, True))
+    # reward_fn = BERTScoreRewardFunction(language="en")
+    # print(reward_fn(None, None, observation, True))
 
-    reward_fn = BLEURewardFunction()
-    print(reward_fn(None, None, observation, True))
+    # reward_fn = BLEURewardFunction()
+    # print(reward_fn(None, None, observation, True))
 
-    reward_fn = BLEURTRewardFunction()
+    # reward_fn = BLEURTRewardFunction()
+    # print(reward_fn(None, None, observation, True))
+
+    reward_fn = PKUHelpfulnessFunction(model_name="../model/beaver-7b-v1.0-reward")
     print(reward_fn(None, None, observation, True))

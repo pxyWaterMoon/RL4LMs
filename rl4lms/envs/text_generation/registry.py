@@ -45,6 +45,8 @@ from rl4lms.envs.text_generation.metric import (
     TERMetric,
     chrFmetric,
     IntentAccuracyDailyDialog,
+    PKUHelpfulness_metric,
+    PKUHarmlessness_metric
 )
 from rl4lms.envs.text_generation.policy.base_policy import LMActorCriticPolicy
 from rl4lms.envs.text_generation.policy.causal_policy import (
@@ -75,6 +77,8 @@ from rl4lms.envs.text_generation.reward import (
     SpiderRewardFunction,
     chrF,
     IntentAccuracy,
+    PKUHarmlessnessFunction,
+    PKUHelpfulnessFunction
 )
 from rl4lms.envs.text_generation.preference_reward import CommonGenPrefRM
 from rl4lms.envs.text_generation.test_datapool import TestTextGenPool
@@ -135,6 +139,8 @@ class RewardFunctionRegistry:
         "chrf": chrF,
         "intent_accuracy": IntentAccuracy,
         "common_gen_preference_model": CommonGenPrefRM,
+        "pku_harmlessness": PKUHarmlessnessFunction,
+        "pku_helpfulness": PKUHelpfulnessFunction,
     }
 
     @classmethod
@@ -171,6 +177,8 @@ class MetricRegistry:
         "ter": TERMetric,
         "chrf": chrFmetric,
         "intent_accuracy": IntentAccuracyDailyDialog,
+        "pku_harmlessness": PKUHarmlessness_metric,
+        "pku_helpfulness": PKUHelpfulness_metric,
     }
 
     @classmethod

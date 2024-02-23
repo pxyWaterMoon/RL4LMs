@@ -6,9 +6,13 @@ tokenizer:
   pad_token_as_eos_token: False
 
 reward_fn:
-  id: rouge
+  # id: rouge
+  # args:
+  #   rouge_type: "rouge1"
+  id: pku_helpfulness
   args:
-    rouge_type: "rouge1"
+    # model_name: /mnt/lustrenew/zhangjiawei/rlhf/model/t5-base # mnt
+    model_name: ../model/beaver-7b-v1.0-reward #local
 
 datapool:
   id: PKUSafeRLHF
