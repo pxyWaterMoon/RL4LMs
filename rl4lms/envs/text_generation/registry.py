@@ -78,7 +78,8 @@ from rl4lms.envs.text_generation.reward import (
     chrF,
     IntentAccuracy,
     PKUHarmlessnessFunction,
-    PKUHelpfulnessFunction
+    PKUHelpfulnessFunction,
+    PKUFunction
 )
 from rl4lms.envs.text_generation.preference_reward import CommonGenPrefRM
 from rl4lms.envs.text_generation.test_datapool import TestTextGenPool
@@ -141,6 +142,7 @@ class RewardFunctionRegistry:
         "common_gen_preference_model": CommonGenPrefRM,
         "pku_harmlessness": PKUHarmlessnessFunction,
         "pku_helpfulness": PKUHelpfulnessFunction,
+        "pku" : PKUFunction,
     }
 
     @classmethod

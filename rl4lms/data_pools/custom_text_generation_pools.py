@@ -591,7 +591,7 @@ class PKUSafeRLHF(TextGenPool):
         samples = []
         # print(dataset)
         # exit()
-        for ix, item in tqdm(enumerate(dataset[split]), desc="Preparing dataset", total=len(dataset[split])):
+        for ix, item in tqdm(enumerate(dataset[dataset_split]), desc="Preparing dataset", total=len(dataset[dataset_split])):
         
             # print(item)
             input = item["prompt"]

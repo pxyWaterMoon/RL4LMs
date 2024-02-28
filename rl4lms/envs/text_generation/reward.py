@@ -754,6 +754,69 @@ class PKUHarmlessnessFunction(RewardFunction):
                 return scores
         return 0
 
+class PKUFunction(RewardFunction):
+    
+    def __init__(
+        self,
+        helpful_model_name: str,
+        harmless_model_name: str,
+        include_prompt_for_eval: bool = True,
+        truncation: bool = True,
+        padding: bool = True,
+        max_length: int = 512
+    ) -> None:
+        super().__init__()
+        # self._device = "cuda" if torch.cuda.is_available() else "cpu"
+        self._device
+        self._helpful_tokenizer = AutoTokenizer.from_pretrained(helpful_model_name, use_fast=False)
+        self._harmlss_tokenizer = AutoTokenizer.from_pretrained(harmless_model_name, use_fast=False)
+        self._helpful_model = AutoModelForScore.from_pretrained(helpful_model_name).to(self._device)
+        self._harmless_model = AutoModelForScore.from_pretrained(harmless_model_name).to(self._device)
+        self._include_prompt_for_eval = include_prompt_for_eval
+        self._truncation = truncation
+        self._padding = padding
+        self._max_length = max_length
+    
+    def __call__(
+        self,
+        current_observation: Observation,
+        action: int,
+        next_observation: Observation,
+        done: bool,
+        meta_info: Dict[str, Any] = None,
+    ) -> List[float]:
+        if done:
+            generated_text = (
+                current_observation.prompt_or_input_text
+                if (self._include_prompt_for_eval and current_observation is not None) 
+                else ""
+            )
+            generated_text += next_observation.context_text
+
+            with torch.no_grad():
+                helpful_encoded = self._helpful_tokenizer(
+                    generated_text, 
+                    return_tensors="pt",
+                    truncation=self._truncation,
+                    padding=self._padding,
+                    max_length=self._max_length
+                ).to(self._device)
+                helpful_scores = self._model(**helpful_encoded)
+                helpful_scores = helpful_scores.end_scores.tolist()
+                
+                harmless_encoded = self._harmless_tokenizer(
+                    generated_text, 
+                    return_tensors="pt",
+                    truncation=self._truncation,
+                    padding=self._padding,
+                    max_length=self._max_length
+                ).to(self._device)
+                harmless_scores = self._model(**harmless_encoded)
+                harmless_scores = harmless_scores.end_scores.tolist()
+                self.constraint_rewards = harmless_scores
+                return helpful_scores
+        return 0
+
 if __name__ == "__main__":
     predictions = "hello there general kenobi"
     references = ["hello there general kenobi", "hello there!!"]
@@ -788,5 +851,8 @@ if __name__ == "__main__":
     # reward_fn = BLEURTRewardFunction()
     # print(reward_fn(None, None, observation, True))
 
-    reward_fn = PKUHelpfulnessFunction(model_name="../model/beaver-7b-v1.0-reward")
+    # reward_fn = PKUHelpfulnessFunction(model_name="../model/beaver-7b-v1.0-reward")
+    # print(reward_fn(None, None, observation, True))
+
+    reward_fn = PKUFunction(helpful_model_name="../model/beaver-7b-v1.0-reward", harmless_model_name="../model/beaver-7b-v1.0-cost")
     print(reward_fn(None, None, observation, True))
